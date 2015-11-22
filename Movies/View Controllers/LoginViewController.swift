@@ -270,11 +270,7 @@ extension LoginViewController {
       SwiftSpinner.show("Siging in...")
       
       PFUser.logInWithUsernameInBackground(email, password: password, block: { (user: PFUser?, error: NSError?) -> Void in
-        if let error = error {
-          SwiftSpinner.handleUserInfoError(error)
-        } else {
-          self.performSegueWithIdentifier("GoToHome", sender: self)
-        }
+        self.setDefaultRealmThenTransferToHome(error: error, email: email)
       })
     }
   }
@@ -290,13 +286,17 @@ extension LoginViewController {
       
       user.signUpInBackgroundWithBlock {
         (succeeded: Bool, error: NSError?) -> Void in
-        if let error = error {
-          SwiftSpinner.handleUserInfoError(error)
-        } else {
-          self.setDefaultRealmForUser(email)
-          self.performSegueWithIdentifier("GoToHome", sender: self)
-        }
+        self.setDefaultRealmThenTransferToHome(error: error, email: email)
       }
+    }
+  }
+  
+  func setDefaultRealmThenTransferToHome(error error: NSError?, email: String) {
+    if let error = error {
+      SwiftSpinner.handleUserInfoError(error)
+    } else {
+      self.setDefaultRealmForUser(email)
+      self.performSegueWithIdentifier("GoToHome", sender: self)
     }
   }
   

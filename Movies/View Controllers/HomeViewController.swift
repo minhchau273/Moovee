@@ -78,7 +78,7 @@ class HomeViewController: UIViewController {
       type = ListType.MostRated
       page = withLoadMore ? ++mostRatedPage : mostRatedPage
     case .Favorite:
-      if moviesBasedOnSegment(currentSegment).count == 0 {
+      if moviesBasedOnSegment(currentSegment).count == 0 || PFUser.currentUser() == nil {
         collectionView.hidden = true
         noFavoriteLabel.hidden = false
       }

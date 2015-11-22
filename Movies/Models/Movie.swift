@@ -15,6 +15,7 @@ class Movie: Object {
   dynamic var lowResolutionPoster = ""
   dynamic var thumbnailPoster = ""
   dynamic var originalPoster = ""
+  dynamic var posterLocalPath = ""
   dynamic var releaseDate: NSDate?
   dynamic var overview = ""
   dynamic var voteAverage: Double = 0
@@ -58,6 +59,7 @@ class Movie: Object {
 }
 
 // MARK: - Computed properties
+
 extension Movie {
   var releaseYear: String {
     return releaseDate != nil ? DateFormatter.yyyy.stringFromDate(releaseDate!) : ""
@@ -73,6 +75,7 @@ extension Movie {
 }
 
 // MARK: - RealmObject
+
 extension Movie {
   
   override static func primaryKey() -> String? {
@@ -80,8 +83,9 @@ extension Movie {
   }
   
   func save() {
-    let realm = try! Realm()
+    savePosterToDocumentsDirectory()
     
+    let realm = try! Realm()
     try! realm.write {
       realm.add(self, update: true)
     }
@@ -100,6 +104,42 @@ extension Movie {
   
   static func getFavoriteMovieFromId(id: Int) -> Movie? {
     return Movie.allFavorites.filter({$0.id == id}).first
+  }
+  
+}
+
+// MARK: - Save poster to documents directory
+
+extension Movie {
+  
+  func savePosterToDocumentsDirectory() {
+    let imageUrl = NSURL(string: originalPoster)
+    if let imageUrl = imageUrl,
+      imageData = NSData(contentsOfURL: imageUrl),
+      image = UIImage(data: imageData) {
+        let localPath = getFileInDocumentsDirectory("\(id).jpg")
+        if saveImage(image, path: localPath) {
+          posterLocalPath = localPath
+          print("path: \(posterLocalPath)")
+        }
+    }
+  }
+  
+  func saveImage(image: UIImage, path: String) -> Bool {
+    let jpgImageData = UIImageJPEGRepresentation(image, 1.0)
+    let result = jpgImageData!.writeToFile(path, atomically: true)
+    return result
+  }
+  
+  // Get the documents Directory
+  func getDocumentsDirectory() -> String {
+    let documentsFolderPath = NSSearchPathForDirectoriesInDomains(NSSearchPathDirectory.DocumentDirectory, NSSearchPathDomainMask.UserDomainMask, true)[0]
+    return documentsFolderPath
+  }
+  
+  // Get path for a file in the directory
+  func getFileInDocumentsDirectory(filename: String) -> String {
+    return (getDocumentsDirectory() as NSString).stringByAppendingPathComponent(filename)
   }
   
 }

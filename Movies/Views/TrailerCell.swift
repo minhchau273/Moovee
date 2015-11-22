@@ -34,11 +34,18 @@ class TrailerCell: UICollectionViewCell {
   }
   
   func playVideo(sender: UITapGestureRecognizer) {
-    if let youTubeUrl = NSURL(string: trailer.youTubeUrl), safariUrl = NSURL(string: trailer.safariUrl) {
-      if UIApplication.sharedApplication().canOpenURL(youTubeUrl)  {
-        UIApplication.sharedApplication().openURL(youTubeUrl)
-      } else {
-        UIApplication.sharedApplication().openURL(safariUrl)
+    if Helper.hasConnectivity() {
+      if let youTubeUrl = NSURL(string: trailer.youTubeUrl), safariUrl = NSURL(string: trailer.safariUrl) {
+        if UIApplication.sharedApplication().canOpenURL(youTubeUrl)  {
+          UIApplication.sharedApplication().openURL(youTubeUrl)
+        } else {
+          UIApplication.sharedApplication().openURL(safariUrl)
+        }
+      }
+    } else {
+      if let tableView = self.superview as? UICollectionView {
+        let vc = tableView.dataSource as? UIViewController
+        vc?.showMessageBox(title: "Network Error", message: "Please make sure that you have network connectivity and try again.", actionTitle: "OK")
       }
     }
   }

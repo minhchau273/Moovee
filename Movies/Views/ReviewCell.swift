@@ -20,6 +20,8 @@ class ReviewCell: UITableViewCell {
   
   @IBOutlet weak var readMoreButton: UIButton!
   
+  var isExpanded = false
+  
   weak var delegate: ReviewCellDelegate?
   
   var review: Review! {
@@ -28,7 +30,7 @@ class ReviewCell: UITableViewCell {
       contentLabel.text = review.content
       
       if countLabelLines(contentLabel) > 3 {
-        if review.isExpanded {
+        if isExpanded {
           contentLabel.numberOfLines = 0
           readMoreButton.setTitle("Read less", forState: .Normal)
         } else {
@@ -48,7 +50,7 @@ class ReviewCell: UITableViewCell {
   override func layoutSubviews() {
     super.layoutSubviews()
     
-    if review != nil && review.isExpanded {
+    if review != nil && isExpanded {
       contentLabel.preferredMaxLayoutWidth = contentLabel.frame.size.width
     }
   }

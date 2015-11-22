@@ -14,7 +14,6 @@ class Review: Object {
   dynamic var author = ""
   dynamic var content = ""
   dynamic var movie: Movie?
-  dynamic var isExpanded = false
   
   override static func primaryKey() -> String? {
     return "id"
@@ -38,7 +37,4 @@ class Review: Object {
     return reviews
   }
   
-  override static func ignoredProperties() -> [String] {
-    return ["isExpanded"]
-  }
 }

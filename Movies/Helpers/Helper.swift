@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import ReachabilitySwift
 
 class Helper {
   static func isTestMode() -> Bool {
@@ -22,4 +23,11 @@ class Helper {
     let dict = NSProcessInfo.processInfo().environment
     return dict[key]
   }
+  
+  static func hasConnectivity() -> Bool {
+    let reachability = try! Reachability.reachabilityForInternetConnection()
+    let networkStatus: Int = reachability.currentReachabilityStatus.hashValue
+    return networkStatus != 0
+  }
+  
 }

@@ -14,6 +14,7 @@ target 'Movies' do
   pod 'Parse'
   pod 'SWRevealViewController'
   pod 'Cartography'
+  pod 'ReachabilitySwift'
 end
 
 target 'MoviesTests' do

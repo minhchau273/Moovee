@@ -12,6 +12,7 @@ import HCSStarRatingView
 import SwiftSpinner
 import Cartography
 import RealmSwift
+import Parse
 
 class DetailsViewController: UIViewController {
   
@@ -59,6 +60,7 @@ class DetailsViewController: UIViewController {
   var isLiked = false
   var viewWasLoaded = false
   var overviewText: UITextView!
+  var reviewStatus = [Int: Bool]()
   
   // MARK: - Main funcitons
   
@@ -138,7 +140,7 @@ class DetailsViewController: UIViewController {
         SwiftSpinner.hide()
       } else {
         print("new")
-        
+        isLiked = false
         MovieClient.getMovieWithTrailers(selectedMovieId, completion: { (movie, error) -> () in
           if let movie = movie {
             self.selectedMovie = movie
@@ -153,14 +155,26 @@ class DetailsViewController: UIViewController {
   }
   
   func setPoster() {
-    if let imageUrl = NSURL(string: selectedMovie.originalPoster), placeholderImageUrl = NSURL(string: selectedMovie.lowResolutionPoster) {
-      if let imageData = NSData(contentsOfURL: placeholderImageUrl) {
-        let placeholderImg = UIImage(data: imageData)
-        self.posterImage.af_setImageWithURL(imageUrl, placeholderImage: placeholderImg)
-      } else {
-        self.posterImage.image = UIImage(named: "NoImage")
+    if isLiked {
+      if !selectedMovie.posterLocalPath.isEmpty {
+        if let localImage = UIImage(contentsOfFile: selectedMovie.posterLocalPath) {
+          posterImage.image = localImage
+          print("set local img")
+          return
+        }
+      }
+    } else {
+      if let imageUrl = NSURL(string: selectedMovie.originalPoster), placeholderImageUrl = NSURL(string: selectedMovie.lowResolutionPoster) {
+        if let imageData = NSData(contentsOfURL: placeholderImageUrl) {
+          let placeholderImg = UIImage(data: imageData)
+          self.posterImage.af_setImageWithURL(imageUrl, placeholderImage: placeholderImg)
+          return
+        }
       }
     }
+    
+    // If cannot get image from server or local DB
+    self.posterImage.image = UIImage(named: "NoImage")
   }
   
   func setRatingStar(rating: Double) {
@@ -234,9 +248,13 @@ extension DetailsViewController: MovieSelectionDelegate {
 // MARK: - Handle add favorite movie
 extension DetailsViewController {
   @IBAction func onLikeButtonTapped(sender: UIButton) {
-    if isLiked {
-      selectedMovie.save()
-      likeButton.setImage(UIImage(named: "Liked"), forState: .Normal)
+    if !isLiked {
+      if PFUser.currentUser() != nil {
+        selectedMovie.save()
+        likeButton.setImage(UIImage(named: "Liked"), forState: .Normal)
+      } else {
+        showMessageBox(title: "Please sign in to save this movie to your favorites!", message: nil, actionTitle: "OK")
+      }
     }
   }
 }
@@ -350,10 +368,15 @@ extension DetailsViewController {
   }
   
   func loadReviewsToTableView() {
-    if self.selectedMovie.reviews.count > 0 {
+    if selectedMovie.reviews.count > 0 {
       tableView.reloadData()
       noReviewLabel.hidden = true
       tableView.hidden = false
+      
+      // Store expand status in array
+      for index in 0..<selectedMovie.reviews.count {
+        reviewStatus[index] = false
+      }
     } else {
       noReviewLabel.hidden = false
       tableView.hidden = true
@@ -380,6 +403,7 @@ extension DetailsViewController: UITableViewDataSource, UITableViewDelegate {
   
   func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
     let cell = tableView.dequeueReusableCellWithIdentifier("ReviewCell", forIndexPath: indexPath) as! ReviewCell
+    cell.isExpanded = reviewStatus[indexPath.section]!
     cell.review = selectedMovie.reviews[indexPath.section]
     cell.delegate = self
     cell.setSeparatorFullWidth()
@@ -396,8 +420,10 @@ extension DetailsViewController: UITableViewDataSource, UITableViewDelegate {
 
 extension DetailsViewController: ReviewCellDelegate {
   func reviewCell(reviewCell: ReviewCell, onTapReadMore: AnyObject?) {
-    if let indexPath = tableView.indexPathForCell(reviewCell), review = reviewCell.review {
-      review.isExpanded = !review.isExpanded
+    if let indexPath = tableView.indexPathForCell(reviewCell) {
+      if let value = reviewStatus[indexPath.section] {
+        reviewStatus[indexPath.section] = !value
+      }
       tableView.reloadSections(NSIndexSet(index: indexPath.section), withRowAnimation: UITableViewRowAnimation.Automatic)
     }
   }
