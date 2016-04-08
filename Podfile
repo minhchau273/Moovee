@@ -25,3 +25,4 @@ target 'MoviesTests' do
   pod 'KIF', :git => 'https://github.com/kif-framework/KIF.git', :configurations => ['Debug']
   pod 'Parse'
 end
+ 
